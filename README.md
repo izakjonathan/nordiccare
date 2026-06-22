@@ -1,24 +1,29 @@
-# Nordic Auto Care Web
+# Nordic Auto Care Web v5
 
-Mobile-first Next.js + Tailwind app for Nordic Auto Care.
+Next.js + Tailwind customer webpage and open order operations backend.
 
-## Current build
-v4-order-backend-open
-
-## Included
-- Customer-facing booking/request form
-- Package selection and custom standalone service selection
-- Extras/tillæg
-- Multiple cars in one request
-- Contact and invoice information
-- Preferred date and time
-- Open admin/backend order dashboard
-- Order status workflow, internal notes, date/time assignment and local persistence
+## v5 changes
+- Built from `nordic-auto-care-web-v4-order-backend-open.zip`.
+- Expanded the backend from a basic order list into an operations system.
+- Added backend tabs: Overview, Pipeline, Calendar, Customers, Backup.
+- Added order search across customer, phone, email, car, registration, and order ID.
+- Added payment status, priority, responsible person, activity log, and stronger KPI cards.
+- Added full backend editing for customer info, invoice info, car details, package, services, extras, and notes.
+- Added add/remove cars directly inside existing orders.
+- Added calendar-style daily order view.
+- Added customer summary list.
+- Added JSON export/import backup for local order data.
 
 ## Important
-The backend is intentionally open for now and uses browser localStorage as the first prototype. For production, connect the order flow to Supabase, a database, or an email/API endpoint so requests are shared across devices.
+The backend is intentionally open and still uses browser localStorage. This is good for design/prototype testing, but it is not a shared production database yet.
 
-## Commands
+## Run locally
+```bash
 npm install
-npm run build
 npm run dev
+```
+
+## Build
+```bash
+npm run build
+```
