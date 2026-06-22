@@ -1,21 +1,24 @@
-# Nordic Auto Care Web — v3
+# Nordic Auto Care Web
 
-Next.js + Tailwind landing page for Nordic Auto Care.
+Mobile-first Next.js + Tailwind app for Nordic Auto Care.
 
-Changes in v3:
-- Removed the hero/header background image completely from the main page.
-- Kept the logo image only for the temporary splash screen.
-- Tightened the first section spacing so the page starts with content instead of a large image/header area.
+## Current build
+v4-order-backend-open
 
-## Run
+## Included
+- Customer-facing booking/request form
+- Package selection and custom standalone service selection
+- Extras/tillæg
+- Multiple cars in one request
+- Contact and invoice information
+- Preferred date and time
+- Open admin/backend order dashboard
+- Order status workflow, internal notes, date/time assignment and local persistence
 
-```bash
+## Important
+The backend is intentionally open for now and uses browser localStorage as the first prototype. For production, connect the order flow to Supabase, a database, or an email/API endpoint so requests are shared across devices.
+
+## Commands
 npm install
-npm run dev
-```
-
-## Build
-
-```bash
 npm run build
-```
+npm run dev
