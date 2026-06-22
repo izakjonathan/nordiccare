@@ -161,15 +161,11 @@ export default function Home() {
       <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_50%_-10%,rgba(180,116,59,.25),transparent_34%),linear-gradient(180deg,#0b0a09_0%,#030303_100%)]" />
       <div className="noise fixed inset-0 -z-10 opacity-35" />
 
-      <section className="relative flex min-h-[100svh] items-center px-5 py-8 sm:px-8 lg:px-12">
-        <div className="absolute inset-0 opacity-30">
-          <Image src="/images/nordic-brand-services.jpeg" alt="Sort luksusbil" fill priority sizes="100vw" className="object-cover object-left-bottom" />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-black/80 to-black" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/60 to-black/90" />
-        </div>
+      <section className="relative flex px-5 pb-8 pt-14 sm:px-8 sm:pt-18 lg:px-12 lg:pb-12 lg:pt-24">
+        <div className="absolute inset-x-0 top-0 h-[34rem] bg-[radial-gradient(circle_at_50%_0%,rgba(196,135,77,.18),transparent_55%)]" aria-hidden="true" />
 
-        <div className="mx-auto grid w-full max-w-7xl items-center gap-10 lg:grid-cols-[1.08fr_.92fr]">
-          <div className="relative z-10 flex min-h-[58svh] flex-col justify-center gap-10 pt-8 lg:min-h-[72vh]">
+        <div className="mx-auto grid w-full max-w-7xl items-center gap-8 lg:grid-cols-[1.08fr_.92fr]">
+          <div className="relative z-10 flex flex-col justify-center gap-8 pt-4 lg:pt-0">
             <div>
               <p className="text-center text-[0.78rem] uppercase tracking-[0.54em] text-stone-200 lg:text-left">Din bil i bedste hænder</p>
               <div className="mx-auto mt-4 h-px w-48 bg-gold/70 lg:mx-0" />
