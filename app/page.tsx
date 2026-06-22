@@ -169,11 +169,8 @@ export default function Home() {
         </div>
 
         <div className="mx-auto grid w-full max-w-7xl items-center gap-10 lg:grid-cols-[1.08fr_.92fr]">
-          <div className="relative z-10 flex min-h-[76svh] flex-col justify-between pt-8 lg:min-h-[82vh]">
+          <div className="relative z-10 flex min-h-[58svh] flex-col justify-center gap-10 pt-8 lg:min-h-[72vh]">
             <div>
-              <div className="mx-auto mb-8 w-full max-w-[21rem] lg:mx-0">
-                <Image src="/images/nordic-logo-splash.jpeg" alt="Nordic Auto Care logo" width={709} height={1536} priority className="h-auto w-full rounded-[2rem] object-cover shadow-[0_0_60px_rgba(188,126,70,.22)]" />
-              </div>
               <p className="text-center text-[0.78rem] uppercase tracking-[0.54em] text-stone-200 lg:text-left">Din bil i bedste hænder</p>
               <div className="mx-auto mt-4 h-px w-48 bg-gold/70 lg:mx-0" />
               <p className="mt-4 text-center text-sm uppercase tracking-[0.42em] text-gold lg:text-left">Kvalitet · Omhu · Tillid</p>

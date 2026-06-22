@@ -1,20 +1,21 @@
-# Nordic Auto Care Webpage
+# Nordic Auto Care Web
 
-Mobile-first Next.js + Tailwind webpage based on the supplied Nordic Auto Care visual references.
+Next.js/Tailwind landing page based on the provided Nordic Auto Care visual identity and service/pricing images.
+
+## Latest change
+- Removed the visible header/hero logo image from the page.
+- Kept the logo as the temporary splash screen.
 
 ## Run locally
-
 ```bash
 npm install
 npm run dev
 ```
 
-## Deploy on Vercel
+## Build
+```bash
+npm run build
+```
 
-Upload or commit the full project folder. Vercel will detect Next.js automatically.
-
-## Main files
-
-- `app/page.tsx` – page structure, services, packages and contact information
-- `app/globals.css` – visual styling, splash screen and responsive polish
-- `public/images/` – supplied brand/reference images
+## Deploy
+Deploy directly to Vercel. The project uses Node 20+.
