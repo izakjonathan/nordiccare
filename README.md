@@ -16,3 +16,7 @@ npm run build
 
 ## v14 icons
 Added favicon, Apple touch icons, PWA icon files and web manifest for Vercel deployment.
+
+
+## v15 homescreen icon fix
+Added explicit iOS apple-touch-icon links, apple-touch-icon-precomposed, extra iOS icon sizes, root favicon files, and expanded web manifest. Existing homescreen shortcuts may need to be deleted and re-added because iOS caches icons.
