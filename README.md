@@ -1,18 +1,44 @@
-# Nordic Auto Care Web v10 — readable backend dock
+# Nordic Auto Care Web v11
 
-Built from v9 backend footer dock.
+Built from v10 readable backend dock.
 
-## Changes in v10
-- Backend footer dock is now horizontally scrollable on mobile.
-- Dock buttons have fixed readable width on small screens.
-- Labels no longer overlap or get crushed together.
-- Active backend module remains highlighted.
-- Desktop still keeps the dock compact and centered.
+## Changes in v11
 
-## Run
+- Fixed backend module mobile scaling.
+- Added overflow guards so backend modules cannot expand wider than the phone screen.
+- Added responsive backend section headings, including the Company Information/Firma module.
+- Reduced mobile backend padding and panel sizing where needed.
+- Kept the readable horizontal backend dock from v10.
+
+## Run locally
+
+```bash
 npm install
 npm run dev
+```
 
-Customer frontend: /
-Backend: /backend
-Prototype backend PIN: 2026
+Customer frontend:
+
+```txt
+http://localhost:3000
+```
+
+Backend:
+
+```txt
+http://localhost:3000/backend
+```
+
+Prototype backend PIN:
+
+```txt
+2026
+```
+
+## Build test
+
+Production build was tested successfully with:
+
+```bash
+npm run build
+```
