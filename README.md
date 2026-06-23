@@ -1,56 +1,64 @@
-# Nordic Auto Care Web v8
+# Nordic Auto Care Web v9 — Backend Footer Dock
 
-Next.js + Tailwind prototype for Nordic Auto Care.
+Built from v8 frontend order footer baseline.
 
-## Routes
-
-- `/` customer frontend
-- `/backend` separated backend
-- Backend prototype PIN: `2026`
-
-## v8 changes
-
-Built from `nordic-auto-care-web-v7-invoice-module.zip`.
-
-- Adds a fixed bottom order/footer card on the customer frontend when an order draft exists.
-- The order footer card can expand/collapse.
-- Expanded order footer shows all current draft information:
-  - selected package per car
-  - included package items
-  - extra standalone services
-  - tillæg/extras
-  - car info and notes
-  - contact info
-  - invoice info
-  - preferred date/time
-  - total price
-- Footer card can submit the booking form directly or jump back to edit.
-- Package selection cards in the booking form now show the same included item overview as the package overview section further down the page.
-- Backend and invoice module from v7 are kept.
-
-## Local development
+## Run locally
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open customer frontend:
+Customer frontend:
 
 ```text
 http://localhost:3000
 ```
 
-Open backend:
+Backend:
 
 ```text
 http://localhost:3000/backend
 ```
 
-## Build test
+Prototype backend PIN:
 
-```bash
-npm run build
+```text
+2026
 ```
 
-Build passes successfully.
+## v9 changes
+
+- Rebuilt backend navigation as a fixed footer dock inspired by EventOS.
+- Added backend modules:
+  - New orders
+  - Calendar
+  - Invoices
+  - Completed orders
+  - Services
+  - Company information
+  - Backup
+- New orders appear as collapsible cards with full editable order info.
+- New orders can be accepted with one button, changing status to confirmed and opening a prefilled confirmation email to the customer.
+- Calendar shows accepted orders only, ordered by planned date/time, with collapsible cards and order-status dropdown.
+- Order statuses now use a clearer workflow:
+  - Ny
+  - Bekræftet
+  - Planlagt
+  - I gang
+  - Udført
+  - Faktura sendt
+  - Betaling modtaget
+  - Annulleret
+- Invoices module shows confirmed/active/completed orders and keeps invoice creation/sending workflow.
+- Sending an invoice automatically changes the linked order to `Faktura sendt`.
+- Marking an invoice paid automatically changes the linked order to `Betaling modtaget`.
+- Completed orders module is split into:
+  - Faktura sendt / afventer betaling
+  - Betaling modtaget
+- Services module lets packages, standalone services and add-ons be edited/added as drafts before publishing.
+- Company information module lets contact and invoice information be edited and saved locally.
+
+## Prototype note
+
+This version still uses browser localStorage for data persistence and mailto links for sending emails. A real production version should connect the customer frontend and backend to a database and email provider.

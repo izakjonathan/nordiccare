@@ -3,19 +3,20 @@
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-type Service = { id: string; name: string; price: number; note?: string };
-type Extra = { id: string; name: string; price: number; note?: string };
-type CarePackage = { id: string; title: string; price: number; items: string[]; icon: "shield" | "diamond" | "crown" | "laurel" };
+type Service = { id: string; name: string; price: number; note?: string; description?: string; draft?: boolean };
+type Extra = { id: string; name: string; price: number; note?: string; description?: string; draft?: boolean };
+type CarePackage = { id: string; title: string; price: number; items: string[]; icon: "shield" | "diamond" | "crown" | "laurel"; description?: string; draft?: boolean };
 type CarEntry = { id: string; type: string; makeModel: string; reg: string; packageId: string; services: string[]; extras: string[]; notes: string };
 type CustomerInfo = { name: string; phone: string; email: string; address: string };
 type InvoiceInfo = { invoiceType: string; company: string; cvr: string; invoiceEmail: string; invoiceAddress: string };
-type OrderStatus = "Ny" | "Kontaktet" | "Bekræftet" | "I gang" | "Færdig" | "Faktureret" | "Annulleret";
-type PaymentStatus = "Ikke faktureret" | "Sendt" | "Betalt" | "Afventer";
+type OrderStatus = "Ny" | "Kontaktet" | "Bekræftet" | "Planlagt" | "I gang" | "Udført" | "Færdig" | "Faktura sendt" | "Faktureret" | "Betaling modtaget" | "Annulleret";
+type PaymentStatus = "Ikke faktureret" | "Faktura sendt" | "Sendt" | "Betalt" | "Afventer" | "Forfalden";
 type InvoiceStatus = "Kladde" | "Sendt" | "Betalt" | "Forfalden" | "Annulleret";
 type InvoiceLine = { id: string; text: string; qty: number; price: number };
 type InvoiceRecord = { id: string; orderId: string; invoiceNo: string; createdAt: string; dueDate: string; sentAt?: string; paidAt?: string; customerName: string; email: string; invoiceAddress: string; company: string; cvr: string; status: InvoiceStatus; lines: InvoiceLine[]; note: string };
 type Priority = "Normal" | "Haster" | "VIP";
-type AdminView = "overview" | "pipeline" | "calendar" | "customers" | "invoices" | "settings";
+type CompanyInfo = { name: string; phone: string; email: string; openingHours: string; address: string; invoiceName: string; cvr: string; invoiceEmail: string; invoiceAddress: string; paymentTerms: string; bankInfo: string };
+type AdminView = "newOrders" | "calendar" | "invoices" | "completed" | "services" | "company" | "settings";
 type Order = {
   id: string;
   createdAt: string;
@@ -37,9 +38,11 @@ type Order = {
 
 const STORAGE_KEY = "nordic-auto-care-orders-v2";
 const INVOICE_STORAGE_KEY = "nordic-auto-care-invoices-v1";
+const SERVICE_DRAFTS_KEY = "nordic-auto-care-service-drafts-v1";
+const COMPANY_INFO_KEY = "nordic-auto-care-company-info-v1";
 const LEGACY_STORAGE_KEY = "nordic-auto-care-orders-v1";
 
-const services: Service[] = [
+let services: Service[] = [
   { id: "handwash", name: "Udvendig håndvask", price: 249 },
   { id: "inside", name: "Indvendig rengøring", price: 399 },
   { id: "complete", name: "Komplet rengøring inde & ude", price: 599 },
@@ -55,39 +58,41 @@ const services: Service[] = [
   { id: "odor", name: "Lugtfjernelse / Ozonbehandling", price: 499 }
 ];
 
-const extras: Extra[] = [
+let extras: Extra[] = [
   { id: "dirty", name: "Ekstra beskidt bil", price: 200, note: "fra 200 kr." },
   { id: "suv", name: "Stor SUV / Varevogn", price: 300 },
   { id: "pet", name: "Dyrehår", price: 299 },
   { id: "tar", name: "Tjære- og flyverustbehandling", price: 399 }
 ];
 
-const packages: CarePackage[] = [
+let packages: CarePackage[] = [
   { id: "basis", title: "Basis pakke", price: 599, icon: "shield", items: ["Udvendig håndvask", "Støvsugning", "Aftørring af kabine", "Rudepudsning"] },
   { id: "premium", title: "Premium pakke", price: 1199, icon: "diamond", items: ["Komplet rengøring inde & ude", "Fælgrens", "Dækpleje", "Lakforsegling"] },
   { id: "deluxe", title: "Deluxe pakke", price: 2499, icon: "crown", items: ["Komplet rengøring", "1-trins polering", "Lakforsegling", "Fælgrens og dækpleje"] },
   { id: "ultimate", title: "Ultimate pakke", price: 5999, icon: "laurel", items: ["Komplet rengøring", "2-trins polering", "Keramisk coating", "Fælgrens", "Dækpleje", "Lakbeskyttelse"] }
 ];
 
-const statuses: OrderStatus[] = ["Ny", "Kontaktet", "Bekræftet", "I gang", "Færdig", "Faktureret", "Annulleret"];
-const paymentStatuses: PaymentStatus[] = ["Ikke faktureret", "Sendt", "Betalt", "Afventer"];
+const statuses: OrderStatus[] = ["Ny", "Bekræftet", "Planlagt", "I gang", "Udført", "Faktura sendt", "Betaling modtaget", "Annulleret"];
+const paymentStatuses: PaymentStatus[] = ["Ikke faktureret", "Faktura sendt", "Betalt", "Forfalden"];
 const priorities: Priority[] = ["Normal", "Haster", "VIP"];
 const qualities = [
   { title: "Kvalitet i topklasse", icon: "badge" },
   { title: "Detaljer der gør forskellen", icon: "spark" },
   { title: "Personlig service", icon: "handshake" }
 ];
-const adminViews: Array<{ id: AdminView; label: string }> = [
-  { id: "overview", label: "Overblik" },
-  { id: "pipeline", label: "Pipeline" },
-  { id: "calendar", label: "Kalender" },
-  { id: "customers", label: "Kunder" },
-  { id: "invoices", label: "Faktura" },
-  { id: "settings", label: "Backup" }
+const adminViews: Array<{ id: AdminView; label: string; icon: string }> = [
+  { id: "newOrders", label: "Nye", icon: "＋" },
+  { id: "calendar", label: "Kalender", icon: "◷" },
+  { id: "invoices", label: "Faktura", icon: "◆" },
+  { id: "completed", label: "Færdige", icon: "✓" },
+  { id: "services", label: "Ydelser", icon: "✎" },
+  { id: "company", label: "Firma", icon: "◎" },
+  { id: "settings", label: "Backup", icon: "↧" }
 ];
 
 const emptyCustomer: CustomerInfo = { name: "", phone: "", email: "", address: "" };
 const emptyInvoice: InvoiceInfo = { invoiceType: "Privat", company: "", cvr: "", invoiceEmail: "", invoiceAddress: "" };
+const defaultCompanyInfo: CompanyInfo = { name: "Nordic Auto Care", phone: "81912674", email: "nordicacare.2026@gmail.com", openingHours: "Åben 8-20 hver dag", address: "", invoiceName: "Nordic Auto Care", cvr: "", invoiceEmail: "nordicacare.2026@gmail.com", invoiceAddress: "", paymentTerms: "8 dage", bankInfo: "" };
 const makeCar = (): CarEntry => ({ id: cryptoId(), type: "Personbil", makeModel: "", reg: "", packageId: "basis", services: [], extras: [], notes: "" });
 
 function cryptoId() {
@@ -136,7 +141,7 @@ function selectedNames(ids: string[], source: Array<{ id: string; name: string }
 function normaliseOrder(order: Order): Order {
   return {
     ...order,
-    status: order.status ?? "Ny",
+    status: ((order.status === "Kontaktet" ? "Ny" : order.status === "Færdig" ? "Udført" : order.status === "Faktureret" ? "Faktura sendt" : order.status) ?? "Ny") as OrderStatus,
     paymentStatus: order.paymentStatus ?? "Ikke faktureret",
     priority: order.priority ?? "Normal",
     assignedTo: order.assignedTo ?? "",
@@ -178,13 +183,15 @@ export default function NordicAutoCareApp({ mode = "frontend" }: { mode?: "front
   const [selectedOrderId, setSelectedOrderId] = useState<string>("");
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string>("");
   const [submittedId, setSubmittedId] = useState<string>("");
-  const [adminView, setAdminView] = useState<AdminView>("overview");
+  const [adminView, setAdminView] = useState<AdminView>("newOrders");
   const [searchTerm, setSearchTerm] = useState("");
   const importRef = useRef<HTMLInputElement>(null);
   const isBackend = mode === "backend";
   const [adminPin, setAdminPin] = useState("");
   const [adminUnlocked, setAdminUnlocked] = useState(false);
   const [draftSummaryOpen, setDraftSummaryOpen] = useState(false);
+  const [serviceDrafts, setServiceDrafts] = useState(() => ({ services: services.map((item) => ({ ...item, draft: false })), extras: extras.map((item) => ({ ...item, draft: false })), packages: packages.map((item) => ({ ...item, draft: false, description: item.items.join(", ") })) }));
+  const [companyInfo, setCompanyInfo] = useState<CompanyInfo>(defaultCompanyInfo);
 
   useEffect(() => {
     if (!isBackend) return;
@@ -222,10 +229,23 @@ export default function NordicAutoCareApp({ mode = "frontend" }: { mode?: "front
         setSelectedInvoiceId(parsedInvoices[0]?.id ?? "");
       }
     } catch { setInvoices([]); }
+    try {
+      const storedCatalog = localStorage.getItem(SERVICE_DRAFTS_KEY);
+      if (storedCatalog) {
+        const parsedCatalog = JSON.parse(storedCatalog);
+        if (parsedCatalog.services) services = parsedCatalog.services.filter((item: Service) => !item.draft);
+        if (parsedCatalog.extras) extras = parsedCatalog.extras.filter((item: Extra) => !item.draft);
+        if (parsedCatalog.packages) packages = parsedCatalog.packages.filter((item: CarePackage) => !item.draft);
+        setServiceDrafts(parsedCatalog);
+      }
+    } catch {}
+    try { const storedCompany = localStorage.getItem(COMPANY_INFO_KEY); if (storedCompany) setCompanyInfo({ ...defaultCompanyInfo, ...JSON.parse(storedCompany) }); } catch {}
   }, []);
 
   useEffect(() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(orders)); }, [orders]);
   useEffect(() => { localStorage.setItem(INVOICE_STORAGE_KEY, JSON.stringify(invoices)); }, [invoices]);
+  useEffect(() => { localStorage.setItem(SERVICE_DRAFTS_KEY, JSON.stringify(serviceDrafts)); services = serviceDrafts.services.filter((item) => !item.draft); extras = serviceDrafts.extras.filter((item) => !item.draft); packages = serviceDrafts.packages.filter((item) => !item.draft); }, [serviceDrafts]);
+  useEffect(() => { localStorage.setItem(COMPANY_INFO_KEY, JSON.stringify(companyInfo)); }, [companyInfo]);
 
   const draftTotal = useMemo(() => orderTotal({ cars }), [cars]);
   const draftStarted = useMemo(() => {
@@ -244,7 +264,7 @@ export default function NordicAutoCareApp({ mode = "frontend" }: { mode?: "front
   }, [activeStatus, orders, searchTerm]);
   const selectedOrder = orders.find((order) => order.id === selectedOrderId) ?? orders[0];
   const kpis = useMemo(() => {
-    const active = orders.filter((order) => !["Færdig", "Faktureret", "Annulleret"].includes(order.status));
+    const active = orders.filter((order) => !["Udført", "Færdig", "Faktura sendt", "Faktureret", "Betaling modtaget", "Annulleret"].includes(order.status));
     const today = new Date().toISOString().slice(0, 10);
     return {
       total: orders.length,
@@ -258,7 +278,7 @@ export default function NordicAutoCareApp({ mode = "frontend" }: { mode?: "front
   }, [invoices, orders]);
   const calendarDays = useMemo(() => {
     const map = new Map<string, Order[]>();
-    orders.forEach((order) => {
+    orders.filter((order) => ["Bekræftet", "Planlagt", "I gang"].includes(order.status)).forEach((order) => {
       const date = order.adminDate || order.preferredDate || "Ikke planlagt";
       map.set(date, [...(map.get(date) ?? []), order]);
     });
@@ -373,20 +393,51 @@ export default function NordicAutoCareApp({ mode = "frontend" }: { mode?: "front
     const body = encodeURIComponent(invoiceEmailBody(invoice));
     if (invoice.email) window.location.href = `mailto:${invoice.email}?subject=${subject}&body=${body}`;
     updateInvoice(id, { status: "Sendt", sentAt: new Date().toISOString() });
-    updateOrder(invoice.orderId, { paymentStatus: "Sendt" }, `Faktura ${invoice.invoiceNo} markeret som sendt`);
+    updateOrder(invoice.orderId, { status: "Faktura sendt", paymentStatus: "Faktura sendt" }, `Faktura ${invoice.invoiceNo} markeret som sendt`);
   }
 
   function markInvoicePaid(id: string) {
     const invoice = invoices.find((item) => item.id === id);
     if (!invoice) return;
     updateInvoice(id, { status: "Betalt", paidAt: new Date().toISOString() });
-    updateOrder(invoice.orderId, { status: "Faktureret", paymentStatus: "Betalt" }, `Faktura ${invoice.invoiceNo} markeret som betalt`);
+    updateOrder(invoice.orderId, { status: "Betaling modtaget", paymentStatus: "Betalt" }, `Faktura ${invoice.invoiceNo} markeret som betalt`);
   }
 
   function deleteInvoice(id: string) {
     const next = invoices.filter((invoice) => invoice.id !== id);
     setInvoices(next);
     if (selectedInvoiceId === id) setSelectedInvoiceId(next[0]?.id ?? "");
+  }
+
+  function orderEmailBody(order: Order) {
+    const carLines = order.cars.map((car, index) => {
+      const pack = packages.find((item) => item.id === car.packageId);
+      const serviceNames = selectedNames(car.services, services);
+      const extraNames = selectedNames(car.extras, extras);
+      return [`Bil ${index + 1}: ${car.type}`, car.makeModel ? `Model: ${car.makeModel}` : "", car.reg ? `Nummerplade: ${car.reg}` : "", pack ? `Pakke: ${pack.title} (${kr(pack.price)})` : "", serviceNames ? `Ydelser: ${serviceNames}` : "", extraNames ? `Tillæg: ${extraNames}` : "", car.notes ? `Noter: ${car.notes}` : ""].filter(Boolean).join("\n");
+    }).join("\n\n");
+    return [`Hej ${order.customer.name || ""}`, "", "Vi har gennemgået og bekræftet din forespørgsel hos Nordic Auto Care.", "", `Ordre: ${order.id}`, `Dato/tid: ${order.adminDate || order.preferredDate || "aftales"} ${order.adminTime || order.preferredTime || ""}`.trim(), "", carLines, "", `Estimeret total: ${kr(orderTotal(order))}`, "", "Svar gerne på denne mail, hvis noget skal ændres.", "", "Med venlig hilsen", companyInfo.name].join("\n");
+  }
+
+  function acceptOrder(id: string) {
+    const order = orders.find((item) => item.id === id);
+    if (!order) return;
+    updateOrder(id, { status: "Bekræftet" }, "Ordre accepteret og bekræftelsesmail klargjort");
+    const email = order.customer.email;
+    if (email) window.location.href = `mailto:${email}?subject=${encodeURIComponent(`Ordrebekræftelse ${order.id} fra ${companyInfo.name}`)}&body=${encodeURIComponent(orderEmailBody(order))}`;
+  }
+
+  function updateServiceDraft(kind: "services" | "extras" | "packages", id: string, patch: Partial<Service & Extra & CarePackage>) {
+    setServiceDrafts((current) => ({ ...current, [kind]: current[kind].map((item: any) => item.id === id ? { ...item, ...patch, draft: true } : item) }));
+  }
+
+  function addServiceDraft(kind: "services" | "extras" | "packages") {
+    const base: any = kind === "packages" ? { id: cryptoId(), title: "Ny pakke", price: 0, items: ["Ny ydelse"], icon: "shield", description: "", draft: true } : { id: cryptoId(), name: kind === "extras" ? "Nyt tillæg" : "Ny ydelse", price: 0, note: "", description: "", draft: true };
+    setServiceDrafts((current) => ({ ...current, [kind]: [base, ...current[kind]] }));
+  }
+
+  function publishServices() {
+    setServiceDrafts((current) => ({ services: current.services.map((item) => ({ ...item, draft: false })), extras: current.extras.map((item) => ({ ...item, draft: false })), packages: current.packages.map((item) => ({ ...item, draft: false })) }));
   }
 
   function exportOrders() {
@@ -470,13 +521,18 @@ export default function NordicAutoCareApp({ mode = "frontend" }: { mode?: "front
       </>}
 
       {isBackend && <section id="admin" className="px-5 py-10 sm:px-8 lg:px-12"><div className="mx-auto max-w-7xl"><div className="mb-8 flex flex-col justify-between gap-4 lg:flex-row lg:items-end"><div><p className="eyebrow">Åben backend</p><h2 className="mt-2 text-3xl font-semibold uppercase tracking-[0.18em] text-gold sm:text-5xl">Order Operations</h2><p className="mt-3 max-w-3xl text-stone-300/75">Ordresystemet er adskilt fra kundesiden og har pipeline, kalender, kundeliste, fuld redigering og backup/import.</p></div><a href="/" className="gold-button">Åbn kundeside</a></div>
-        <div className="admin-shell"><div className="admin-tabs">{adminViews.map((view) => <button key={view.id} type="button" onClick={() => setAdminView(view.id)} className={adminView === view.id ? "admin-tab is-active" : "admin-tab"}>{view.label}</button>)}</div><div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-6">{[{ label: "Ordrer", value: kpis.total }, { label: "Aktive", value: kpis.active }, { label: "I dag", value: kpis.today }, { label: "Biler", value: kpis.cars }, { label: "Est. værdi", value: kr(kpis.value) }, { label: "Fakturaer", value: kpis.invoices }, { label: "Ikke betalt", value: kr(kpis.unpaid) }].map((item) => <div key={item.label} className="panel p-4"><p className="text-xs uppercase tracking-[0.22em] text-stone-400">{item.label}</p><p className="mt-2 text-2xl font-black text-gold">{item.value}</p></div>)}</div>
-          {adminView === "overview" && <><div className="mt-6 grid gap-3 lg:grid-cols-[1fr_auto]"><TextInput value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Søg kunde, telefon, ordre, bil eller nummerplade" /><div className="flex gap-2 overflow-x-auto pb-1"><button onClick={() => setActiveStatus("Alle")} className={activeStatus === "Alle" ? "filter-pill active" : "filter-pill"}>Alle</button>{statuses.map((status) => <button key={status} onClick={() => setActiveStatus(status)} className={activeStatus === status ? "filter-pill active" : "filter-pill"}>{status}</button>)}</div></div><div className="mt-6 grid gap-6 lg:grid-cols-[.86fr_1.14fr]"><OrderList orders={searchedOrders} selectedId={selectedOrder?.id} onSelect={setSelectedOrderId} /><OrderDetail selectedOrder={selectedOrder} onUpdate={updateOrder} onUpdateCustomer={updateOrderCustomer} onUpdateInvoice={updateOrderInvoice} onUpdateCar={updateOrderCar} onToggleCarArray={toggleOrderCarArray} onAddCar={addCarToOrder} onRemoveCar={removeCarFromOrder} onDelete={deleteOrder} /></div></>}
-          {adminView === "pipeline" && <div className="mt-6 grid gap-4 lg:grid-cols-7">{statuses.map((status) => <div key={status} className="pipeline-column"><div className="mb-3 flex items-center justify-between"><h3>{status}</h3><span>{orders.filter((order) => order.status === status).length}</span></div>{orders.filter((order) => order.status === status).map((order) => <button key={order.id} className="pipeline-card" onClick={() => { setSelectedOrderId(order.id); setAdminView("overview"); }}><strong>{order.customer.name || "Ukendt"}</strong><em>{order.adminDate || order.preferredDate || "Ikke planlagt"} · {kr(orderTotal(order))}</em><span>{order.priority ?? "Normal"}</span></button>)}</div>)}</div>}
-          {adminView === "calendar" && <div className="mt-6 grid gap-4">{calendarDays.length === 0 && <div className="panel p-6 text-center text-stone-300/70">Ingen planlagte ordrer endnu.</div>}{calendarDays.map(([date, dayOrders]) => <section key={date} className="panel p-5"><div className="mb-4 flex items-center justify-between"><h3 className="text-xl font-black uppercase tracking-[0.18em] text-gold">{date === "Ikke planlagt" ? date : new Date(`${date}T00:00`).toLocaleDateString("da-DK", { weekday: "long", day: "numeric", month: "long" })}</h3><span className="rounded-full border border-gold/30 px-3 py-1 text-xs uppercase tracking-[0.16em] text-gold">{dayOrders.length} ordre</span></div><div className="grid gap-3">{dayOrders.sort((a, b) => (a.adminTime || a.preferredTime).localeCompare(b.adminTime || b.preferredTime)).map((order) => <button key={order.id} className="calendar-row" onClick={() => { setSelectedOrderId(order.id); setAdminView("overview"); }}><span>{order.adminTime || order.preferredTime || "--:--"}</span><strong>{order.customer.name || "Ukendt kunde"}</strong><em>{order.cars.length} bil(er) · {order.status}</em><b>{kr(orderTotal(order))}</b></button>)}</div></section>)}</div>}
-          {adminView === "customers" && <div className="mt-6 grid gap-3">{customers.length === 0 && <div className="panel p-6 text-center text-stone-300/70">Ingen kunder endnu.</div>}{customers.map((item) => <div key={`${item.phone}-${item.email}-${item.name}`} className="customer-row"><div><strong>{item.name}</strong><p>{item.phone} · {item.email || "ingen email"}</p></div><span>{item.orders} ordre</span><span>{item.cars} bil(er)</span><b>{kr(item.value)}</b></div>)}</div>}
-          {adminView === "invoices" && <InvoiceModule orders={orders} invoices={invoices} selectedInvoiceId={selectedInvoiceId} onSelectInvoice={setSelectedInvoiceId} onCreateFromOrder={createInvoiceFromOrder} onUpdateInvoice={updateInvoice} onSendInvoice={sendInvoice} onMarkPaid={markInvoicePaid} onDeleteInvoice={deleteInvoice} />}
+        <div className="admin-shell pb-28">
+          <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-7">{[{ label: "Nye", value: orders.filter((order) => order.status === "Ny").length }, { label: "Bekræftet", value: orders.filter((order) => ["Bekræftet", "Planlagt", "I gang"].includes(order.status)).length }, { label: "Udført", value: orders.filter((order) => order.status === "Udført").length }, { label: "Faktura sendt", value: orders.filter((order) => order.status === "Faktura sendt").length }, { label: "Betalt", value: orders.filter((order) => order.status === "Betaling modtaget").length }, { label: "Værdi", value: kr(kpis.value) }, { label: "Ikke betalt", value: kr(kpis.unpaid) }].map((item) => <div key={item.label} className="panel p-4"><p className="text-xs uppercase tracking-[0.22em] text-stone-400">{item.label}</p><p className="mt-2 text-2xl font-black text-gold">{item.value}</p></div>)}</div>
+          {adminView === "newOrders" && <NewOrdersModule orders={orders.filter((order) => order.status === "Ny")} onAccept={acceptOrder} onUpdate={updateOrder} onUpdateCustomer={updateOrderCustomer} onUpdateInvoice={updateOrderInvoice} onUpdateCar={updateOrderCar} onToggleCarArray={toggleOrderCarArray} onAddCar={addCarToOrder} onRemoveCar={removeCarFromOrder} onDelete={deleteOrder} />}
+          {adminView === "calendar" && <CalendarModule calendarDays={calendarDays} onUpdate={updateOrder} onSelect={(id) => setSelectedOrderId(id)} />}
+          {adminView === "invoices" && <InvoiceModule orders={orders.filter((order) => ["Bekræftet", "Planlagt", "I gang", "Udført", "Faktura sendt"].includes(order.status))} invoices={invoices} selectedInvoiceId={selectedInvoiceId} onSelectInvoice={setSelectedInvoiceId} onCreateFromOrder={createInvoiceFromOrder} onUpdateInvoice={updateInvoice} onSendInvoice={sendInvoice} onMarkPaid={markInvoicePaid} onDeleteInvoice={deleteInvoice} />}
+          {adminView === "completed" && <CompletedOrdersModule orders={orders.filter((order) => ["Udført", "Faktura sendt", "Betaling modtaget", "Færdig", "Faktureret"].includes(order.status))} onUpdate={updateOrder} onUpdateCustomer={updateOrderCustomer} onUpdateInvoice={updateOrderInvoice} onUpdateCar={updateOrderCar} onToggleCarArray={toggleOrderCarArray} onAddCar={addCarToOrder} onRemoveCar={removeCarFromOrder} onDelete={deleteOrder} />}
+          {adminView === "services" && <ServicesModule drafts={serviceDrafts} onUpdate={updateServiceDraft} onAdd={addServiceDraft} onPublish={publishServices} />}
+          {adminView === "company" && <CompanyInfoModule companyInfo={companyInfo} onChange={setCompanyInfo} />}
           {adminView === "settings" && <div className="mt-6 grid gap-5 lg:grid-cols-2"><section className="panel p-6"><h3 className="panel-title">Backup</h3><p className="text-stone-300/75">Eksporter alle ordrer til JSON, så data kan gemmes eller flyttes til en anden browser.</p><button className="gold-button mt-5 w-full" onClick={exportOrders}>Eksporter ordrer</button></section><section className="panel p-6"><h3 className="panel-title">Importer</h3><p className="text-stone-300/75">Importer en tidligere JSON backup. Dette erstatter de nuværende lokale ordrer.</p><input ref={importRef} type="file" accept="application/json" className="hidden" onChange={(e) => importOrders(e.target.files?.[0])} /><button className="outline-button mt-5 w-full" onClick={() => importRef.current?.click()}>Importer backup</button></section></div>}
+          <nav className="fixed bottom-3 left-1/2 z-50 flex w-[calc(100%-1.5rem)] max-w-3xl -translate-x-1/2 items-center justify-between gap-1 rounded-[1.6rem] border border-gold/30 bg-black/92 p-2 shadow-[0_0_35px_rgba(199,127,58,.22)] backdrop-blur-xl">
+            {adminViews.map((view) => <button key={view.id} type="button" onClick={() => setAdminView(view.id)} className={`grid min-w-0 flex-1 place-items-center rounded-2xl px-2 py-2 text-[0.62rem] font-black uppercase tracking-[0.08em] transition ${adminView === view.id ? "bg-gold text-black" : "text-gold hover:bg-gold/10"}`}><span className="text-lg leading-none">{view.icon}</span><span className="mt-1 truncate">{view.label}</span></button>)}
+          </nav>
         </div></div></section>}
       {!isBackend && draftStarted && <DraftOrderFooter cars={cars} customer={customer} invoice={invoice} preferredDate={preferredDate} preferredTime={preferredTime} customerMessage={customerMessage} total={draftTotal} isOpen={draftSummaryOpen} onToggle={() => setDraftSummaryOpen((open) => !open)} />}
       {!isBackend && draftStarted && <div className={draftSummaryOpen ? "h-[32rem] sm:h-80" : "h-36"} aria-hidden="true" />}
@@ -565,6 +621,61 @@ function InvoiceModule({ orders, invoices, selectedInvoiceId, onSelectInvoice, o
       {!selectedInvoice ? <div className="panel grid min-h-[28rem] place-items-center p-6 text-center text-stone-300/70">Vælg eller opret en faktura.</div> : <section className="panel p-5 sm:p-6"><div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start"><div><p className="eyebrow">{selectedInvoice.orderId}</p><h3 className="mt-2 text-3xl font-black uppercase tracking-[0.12em] text-gold">{selectedInvoice.invoiceNo}</h3><p className="mt-2 text-stone-300/75">{selectedInvoice.customerName || "Ukendt kunde"} · {selectedInvoice.email || "ingen email"}</p></div><div className="text-left sm:text-right"><p className="text-xs uppercase tracking-[0.18em] text-stone-400">Total</p><p className="text-3xl font-black text-gold">{kr(invoiceTotal(selectedInvoice))}</p></div></div><div className="mt-6 grid gap-4 sm:grid-cols-3"><Field label="Fakturanr."><TextInput value={selectedInvoice.invoiceNo} onChange={(e) => onUpdateInvoice(selectedInvoice.id, { invoiceNo: e.target.value })} /></Field><Field label="Status"><Select value={selectedInvoice.status} onChange={(e) => onUpdateInvoice(selectedInvoice.id, { status: e.target.value as InvoiceStatus })}><option>Kladde</option><option>Sendt</option><option>Betalt</option><option>Forfalden</option><option>Annulleret</option></Select></Field><Field label="Forfald"><TextInput type="date" value={selectedInvoice.dueDate} onChange={(e) => onUpdateInvoice(selectedInvoice.id, { dueDate: e.target.value })} /></Field><Field label="Kunde"><TextInput value={selectedInvoice.customerName} onChange={(e) => onUpdateInvoice(selectedInvoice.id, { customerName: e.target.value })} /></Field><Field label="Email"><TextInput value={selectedInvoice.email} onChange={(e) => onUpdateInvoice(selectedInvoice.id, { email: e.target.value })} /></Field><Field label="CVR"><TextInput value={selectedInvoice.cvr} onChange={(e) => onUpdateInvoice(selectedInvoice.id, { cvr: e.target.value })} /></Field><Field label="Firma"><TextInput value={selectedInvoice.company} onChange={(e) => onUpdateInvoice(selectedInvoice.id, { company: e.target.value })} /></Field><Field label="Fakturaadresse"><TextInput value={selectedInvoice.invoiceAddress} onChange={(e) => onUpdateInvoice(selectedInvoice.id, { invoiceAddress: e.target.value })} /></Field></div><div className="mt-6 detail-box"><div className="mb-4 flex items-center justify-between gap-3"><h4>Fakturalinjer</h4><button type="button" className="outline-button" onClick={addLine}>+ Linje</button></div><div className="grid gap-3">{selectedInvoice.lines.map((line) => <div key={line.id} className="grid gap-3 rounded-2xl border border-gold/15 bg-black/25 p-3 sm:grid-cols-[1fr_5rem_7rem_6rem_auto]"><TextInput value={line.text} onChange={(e) => updateLine(line.id, { text: e.target.value })} /><TextInput type="number" min="1" value={line.qty} onChange={(e) => updateLine(line.id, { qty: Number(e.target.value) || 1 })} /><TextInput type="number" min="0" value={line.price} onChange={(e) => updateLine(line.id, { price: Number(e.target.value) || 0 })} /><div className="grid place-items-center text-sm font-black text-gold">{kr(line.qty * line.price)}</div><button type="button" className="small-danger" onClick={() => removeLine(line.id)}>Fjern</button></div>)}</div></div><div className="mt-6"><Field label="Fakturanote"><TextArea value={selectedInvoice.note} onChange={(e) => onUpdateInvoice(selectedInvoice.id, { note: e.target.value })} /></Field></div><div className="mt-6 grid gap-3 sm:grid-cols-4"><button type="button" className="gold-button" onClick={() => onSendInvoice(selectedInvoice.id)}>Send faktura</button><button type="button" className="outline-button" onClick={() => onMarkPaid(selectedInvoice.id)}>Marker betalt</button><a className="outline-button" href={`mailto:${selectedInvoice.email}`}>Email kunde</a><button type="button" className="small-danger" onClick={() => onDeleteInvoice(selectedInvoice.id)}>Slet faktura</button></div><div className="mt-4 detail-box"><h4>Statuskontrol</h4><p>Oprettet: {new Date(selectedInvoice.createdAt).toLocaleString("da-DK")}</p><p>Sendt: {selectedInvoice.sentAt ? new Date(selectedInvoice.sentAt).toLocaleString("da-DK") : "ikke sendt"}</p><p>Betalt: {selectedInvoice.paidAt ? new Date(selectedInvoice.paidAt).toLocaleString("da-DK") : "ikke betalt"}</p><p>Mail-knappen åbner kundens mailprogram med fakturateksten. Et rigtigt send-/betalingsflow kan kobles på senere med database, email-provider og regnskabssystem.</p></div></section>}
     </div>
   </div>;
+}
+
+type OrderEditHandlers = {
+  onUpdate: (id: string, patch: Partial<Order>, activity?: string) => void;
+  onUpdateCustomer: (id: string, patch: Partial<CustomerInfo>) => void;
+  onUpdateInvoice: (id: string, patch: Partial<InvoiceInfo>) => void;
+  onUpdateCar: (orderId: string, carId: string, patch: Partial<CarEntry>) => void;
+  onToggleCarArray: (orderId: string, carId: string, key: "services" | "extras", itemId: string) => void;
+  onAddCar: (id: string) => void;
+  onRemoveCar: (orderId: string, carId: string) => void;
+  onDelete: (id: string) => void;
+};
+
+function NewOrdersModule({ orders, onAccept, ...handlers }: { orders: Order[]; onAccept: (id: string) => void } & OrderEditHandlers) {
+  return <section className="mt-6 grid gap-4">
+    <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end"><div><p className="eyebrow">New orders</p><h3 className="text-3xl font-black uppercase tracking-[0.16em] text-gold">Nye forespørgsler</h3><p className="mt-2 text-stone-300/75">Alle nye kundeordrer lander her først. Gennemgå, ret information og accepter ordren.</p></div><span className="rounded-full border border-gold/30 px-4 py-2 text-sm font-black uppercase tracking-[0.16em] text-gold">{orders.length} nye</span></div>
+    {orders.length === 0 && <div className="panel p-6 text-center text-stone-300/70">Ingen nye ordrer lige nu.</div>}
+    {orders.map((order) => <details key={order.id} className="panel overflow-hidden p-0" open={orders.length === 1}>
+      <summary className="cursor-pointer list-none p-5"><div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center"><div><p className="eyebrow">{order.id}</p><h4 className="mt-1 text-2xl font-black uppercase tracking-[0.12em] text-gold">{order.customer.name || "Ny kunde"}</h4><p className="mt-1 text-stone-300/75">{order.customer.phone || "telefon mangler"} · {order.preferredDate || "dato mangler"} {order.preferredTime || ""}</p></div><div className="text-left sm:text-right"><p className="text-xs uppercase tracking-[0.18em] text-stone-400">Total</p><p className="text-2xl font-black text-gold">{kr(orderTotal(order))}</p></div></div></summary>
+      <div className="border-t border-gold/15 p-5"><div className="mb-5 grid gap-3 sm:grid-cols-3"><button className="gold-button" type="button" onClick={() => onAccept(order.id)}>Accepter + send mail</button><a className="outline-button" href={`mailto:${order.customer.email}`}>Email kunde</a><a className="outline-button" href={`tel:${order.customer.phone}`}>Ring kunde</a></div><OrderDetail selectedOrder={order} {...handlers} /></div>
+    </details>)}
+  </section>;
+}
+
+function CalendarModule({ calendarDays, onUpdate, onSelect }: { calendarDays: [string, Order[]][]; onUpdate: (id: string, patch: Partial<Order>, activity?: string) => void; onSelect: (id: string) => void }) {
+  return <section className="mt-6 grid gap-4"><div><p className="eyebrow">Calendar</p><h3 className="text-3xl font-black uppercase tracking-[0.16em] text-gold">Bekræftede ordrer</h3><p className="mt-2 text-stone-300/75">Kun accepterede/aktive ordrer vises her, sorteret efter udførelsesdato og tid.</p></div>{calendarDays.length === 0 && <div className="panel p-6 text-center text-stone-300/70">Ingen accepterede ordrer i kalenderen endnu.</div>}{calendarDays.map(([date, dayOrders]) => <section key={date} className="panel p-5"><div className="mb-4 flex items-center justify-between"><h4 className="text-xl font-black uppercase tracking-[0.18em] text-gold">{date === "Ikke planlagt" ? date : new Date(`${date}T00:00`).toLocaleDateString("da-DK", { weekday: "long", day: "numeric", month: "long" })}</h4><span className="rounded-full border border-gold/30 px-3 py-1 text-xs uppercase tracking-[0.16em] text-gold">{dayOrders.length} ordre</span></div><div className="grid gap-3">{dayOrders.sort((a, b) => `${a.adminTime || a.preferredTime}`.localeCompare(`${b.adminTime || b.preferredTime}`)).map((order) => <details key={order.id} className="rounded-2xl border border-gold/15 bg-black/30"><summary className="cursor-pointer list-none p-4"><div className="grid gap-2 sm:grid-cols-[5rem_1fr_auto_auto]"><span className="font-black text-gold">{order.adminTime || order.preferredTime || "--:--"}</span><strong>{order.customer.name || "Ukendt kunde"}</strong><em className="text-stone-300/70">{order.cars.length} bil(er) · {order.status}</em><b className="text-gold">{kr(orderTotal(order))}</b></div></summary><div className="border-t border-gold/10 p-4"><div className="grid gap-3 sm:grid-cols-3"><Field label="Ordrestatus"><Select value={order.status} onChange={(e) => onUpdate(order.id, { status: e.target.value as OrderStatus }, `Status ændret til ${e.target.value}`)}>{statuses.map((status) => <option key={status}>{status}</option>)}</Select></Field><Field label="Dato"><TextInput type="date" value={order.adminDate || order.preferredDate} onChange={(e) => onUpdate(order.id, { adminDate: e.target.value }, "Dato opdateret")} /></Field><Field label="Tid"><TextInput type="time" value={order.adminTime || order.preferredTime} onChange={(e) => onUpdate(order.id, { adminTime: e.target.value }, "Tid opdateret")} /></Field></div><button type="button" className="outline-button mt-4" onClick={() => onSelect(order.id)}>Åbn i ordrevisning</button></div></details>)}</div></section>)}</section>;
+}
+
+function CompletedOrdersModule({ orders, ...handlers }: { orders: Order[] } & OrderEditHandlers) {
+  const invoiceSent = orders.filter((order) => ["Udført", "Faktura sendt", "Færdig", "Faktureret"].includes(order.status));
+  const paid = orders.filter((order) => order.status === "Betaling modtaget" || order.paymentStatus === "Betalt");
+  const renderGroup = (title: string, list: Order[]) => <section className="grid gap-3"><h4 className="panel-title">{title}</h4>{list.length === 0 && <div className="panel p-5 text-stone-300/70">Ingen ordrer i denne gruppe.</div>}{list.map((order) => <details key={order.id} className="panel p-0"><summary className="cursor-pointer list-none p-5"><div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center"><div><p className="eyebrow">{order.id}</p><h5 className="text-2xl font-black uppercase tracking-[0.12em] text-gold">{order.customer.name || "Kunde"}</h5><p className="text-stone-300/70">{order.status} · {order.paymentStatus}</p></div><b className="text-2xl text-gold">{kr(orderTotal(order))}</b></div></summary><div className="border-t border-gold/15 p-5"><OrderDetail selectedOrder={order} {...handlers} /></div></details>)}</section>;
+  return <section className="mt-6 grid gap-8"><div><p className="eyebrow">Completed orders</p><h3 className="text-3xl font-black uppercase tracking-[0.16em] text-gold">Færdige ordrer</h3><p className="mt-2 text-stone-300/75">Listen er opdelt i faktura sendt og betaling modtaget.</p></div>{renderGroup("Faktura sendt / afventer betaling", invoiceSent)}{renderGroup("Betaling modtaget", paid)}</section>;
+}
+
+function ServicesModule({ drafts, onUpdate, onAdd, onPublish }: { drafts: { services: Service[]; extras: Extra[]; packages: CarePackage[] }; onUpdate: (kind: "services" | "extras" | "packages", id: string, patch: Partial<Service & Extra & CarePackage>) => void; onAdd: (kind: "services" | "extras" | "packages") => void; onPublish: () => void }) {
+  return <section className="mt-6 grid gap-6"><div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><p className="eyebrow">Services</p><h3 className="text-3xl font-black uppercase tracking-[0.16em] text-gold">Ydelser, pakker og tillæg</h3><p className="mt-2 text-stone-300/75">Ændringer gemmes som kladder. Tryk publicer for at gøre dem aktive på kundesiden.</p></div><button className="gold-button" type="button" onClick={onPublish}>Publicer alle kladder</button></div>
+    <ServiceGroup title="Pakker" kind="packages" items={drafts.packages} onUpdate={onUpdate} onAdd={onAdd} />
+    <ServiceGroup title="Enkelt ydelser" kind="services" items={drafts.services} onUpdate={onUpdate} onAdd={onAdd} />
+    <ServiceGroup title="Tillæg" kind="extras" items={drafts.extras} onUpdate={onUpdate} onAdd={onAdd} />
+  </section>;
+}
+
+function ServiceGroup({ title, kind, items, onUpdate, onAdd }: { title: string; kind: "services" | "extras" | "packages"; items: Array<Service | Extra | CarePackage>; onUpdate: (kind: "services" | "extras" | "packages", id: string, patch: Partial<Service & Extra & CarePackage>) => void; onAdd: (kind: "services" | "extras" | "packages") => void }) {
+  return <section className="panel p-5"><div className="mb-4 flex items-center justify-between gap-3"><h4 className="panel-title mb-0">{title}</h4><button type="button" className="outline-button" onClick={() => onAdd(kind)}>+ Tilføj</button></div><div className="grid gap-3">{items.map((item) => {
+    const isPackage = kind === "packages";
+    const name = isPackage ? (item as CarePackage).title : (item as Service).name;
+    const desc = isPackage ? (item as CarePackage).items.join("\n") : ((item as Service).description ?? "");
+    return <details key={item.id} className="rounded-2xl border border-gold/15 bg-black/25"><summary className="cursor-pointer list-none p-4"><div className="flex items-center justify-between gap-3"><strong className="text-gold">{name}</strong><span className="text-stone-200">{kr(item.price)}</span>{item.draft && <em className="rounded-full bg-gold px-2 py-1 text-[0.62rem] font-black uppercase tracking-[0.12em] text-black">kladde</em>}</div></summary><div className="grid gap-3 border-t border-gold/10 p-4 sm:grid-cols-2"><Field label="Navn"><TextInput value={name} onChange={(e) => onUpdate(kind, item.id, isPackage ? { title: e.target.value } : { name: e.target.value })} /></Field><Field label="Pris"><TextInput type="number" value={item.price} onChange={(e) => onUpdate(kind, item.id, { price: Number(e.target.value) || 0 })} /></Field>{isPackage && <Field label="Ikon"><Select value={(item as CarePackage).icon} onChange={(e) => onUpdate(kind, item.id, { icon: e.target.value as CarePackage["icon"] })}><option value="shield">Shield</option><option value="diamond">Diamond</option><option value="crown">Crown</option><option value="laurel">Laurel</option></Select></Field>}<div className="sm:col-span-2"><Field label={isPackage ? "Indhold - én linje per punkt" : "Beskrivelse"}><TextArea value={desc} onChange={(e) => onUpdate(kind, item.id, isPackage ? { items: e.target.value.split("\n").filter(Boolean), description: e.target.value } : { description: e.target.value })} /></Field></div>{kind === "extras" && <Field label="Prisnote"><TextInput value={(item as Extra).note ?? ""} onChange={(e) => onUpdate(kind, item.id, { note: e.target.value })} placeholder="fx fra 200 kr." /></Field>}</div></details>;
+  })}</div></section>;
+}
+
+function CompanyInfoModule({ companyInfo, onChange }: { companyInfo: CompanyInfo; onChange: (next: CompanyInfo) => void }) {
+  const patch = (part: Partial<CompanyInfo>) => onChange({ ...companyInfo, ...part });
+  return <section className="mt-6 grid gap-6 lg:grid-cols-2"><div><p className="eyebrow">Company information</p><h3 className="text-3xl font-black uppercase tracking-[0.16em] text-gold">Firmaoplysninger</h3><p className="mt-2 text-stone-300/75">Kontakt- og fakturaoplysninger til ordre-, mail- og fakturaflow.</p></div><section className="panel p-5 lg:col-span-2"><h4 className="panel-title">Kontakt</h4><div className="grid gap-4 sm:grid-cols-2"><Field label="Firmanavn"><TextInput value={companyInfo.name} onChange={(e) => patch({ name: e.target.value })} /></Field><Field label="Telefon"><TextInput value={companyInfo.phone} onChange={(e) => patch({ phone: e.target.value })} /></Field><Field label="Email"><TextInput value={companyInfo.email} onChange={(e) => patch({ email: e.target.value })} /></Field><Field label="Åbningstid"><TextInput value={companyInfo.openingHours} onChange={(e) => patch({ openingHours: e.target.value })} /></Field><div className="sm:col-span-2"><Field label="Adresse"><TextInput value={companyInfo.address} onChange={(e) => patch({ address: e.target.value })} /></Field></div></div></section><section className="panel p-5 lg:col-span-2"><h4 className="panel-title">Faktura</h4><div className="grid gap-4 sm:grid-cols-2"><Field label="Fakturanavn"><TextInput value={companyInfo.invoiceName} onChange={(e) => patch({ invoiceName: e.target.value })} /></Field><Field label="CVR"><TextInput value={companyInfo.cvr} onChange={(e) => patch({ cvr: e.target.value })} /></Field><Field label="Faktura email"><TextInput value={companyInfo.invoiceEmail} onChange={(e) => patch({ invoiceEmail: e.target.value })} /></Field><Field label="Betalingsfrist"><TextInput value={companyInfo.paymentTerms} onChange={(e) => patch({ paymentTerms: e.target.value })} /></Field><div className="sm:col-span-2"><Field label="Fakturaadresse"><TextInput value={companyInfo.invoiceAddress} onChange={(e) => patch({ invoiceAddress: e.target.value })} /></Field></div><div className="sm:col-span-2"><Field label="Bank / betaling"><TextArea value={companyInfo.bankInfo} onChange={(e) => patch({ bankInfo: e.target.value })} /></Field></div></div></section></section>;
 }
 
 function OrderDetail({ selectedOrder, onUpdate, onUpdateCustomer, onUpdateInvoice, onUpdateCar, onToggleCarArray, onAddCar, onRemoveCar, onDelete }: { selectedOrder?: Order; onUpdate: (id: string, patch: Partial<Order>, activity?: string) => void; onUpdateCustomer: (id: string, patch: Partial<CustomerInfo>) => void; onUpdateInvoice: (id: string, patch: Partial<InvoiceInfo>) => void; onUpdateCar: (orderId: string, carId: string, patch: Partial<CarEntry>) => void; onToggleCarArray: (orderId: string, carId: string, key: "services" | "extras", itemId: string) => void; onAddCar: (id: string) => void; onRemoveCar: (orderId: string, carId: string) => void; onDelete: (id: string) => void }) {
