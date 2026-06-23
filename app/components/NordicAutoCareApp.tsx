@@ -536,7 +536,17 @@ export default function NordicAutoCareApp({ mode = "frontend" }: { mode?: "front
         </div></div></section>}
       {!isBackend && draftStarted && <DraftOrderFooter cars={cars} customer={customer} invoice={invoice} preferredDate={preferredDate} preferredTime={preferredTime} customerMessage={customerMessage} total={draftTotal} isOpen={draftSummaryOpen} onToggle={() => setDraftSummaryOpen((open) => !open)} />}
       {!isBackend && draftStarted && <div className={draftSummaryOpen ? "h-[32rem] sm:h-80" : "h-36"} aria-hidden="true" />}
-      <footer className="px-5 pb-8 pt-4 sm:px-8 lg:px-12"><div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 rounded-2xl border border-gold/25 bg-black/55 px-5 py-5 text-center sm:flex-row sm:text-left"><div><p className="text-sm uppercase tracking-[0.28em] text-gold">Nordic Auto Care</p><p className="mt-1 text-sm text-stone-300/70">Tak for din tid og tillid</p></div>{isBackend ? <a href="/" className="gold-button">Åbn kundeside</a> : <a href="#booking" className="gold-button">Book nu</a>}</div></footer>
+      {!isBackend && (
+        <footer className="px-5 pb-8 pt-4 sm:px-8 lg:px-12">
+          <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 rounded-2xl border border-gold/25 bg-black/55 px-5 py-5 text-center sm:flex-row sm:text-left">
+            <div>
+              <p className="text-sm uppercase tracking-[0.28em] text-gold">Nordic Auto Care</p>
+              <p className="mt-1 text-sm text-stone-300/70">Tak for din tid og tillid</p>
+            </div>
+            <a href="#booking" className="gold-button">Book nu</a>
+          </div>
+        </footer>
+      )}
     </main>
   );
 }

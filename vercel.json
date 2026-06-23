@@ -1,5 +1,5 @@
 {
   "framework": "nextjs",
   "buildCommand": "npm run build",
-  "installCommand": "npm install --no-audit --no-fund --legacy-peer-deps --cache=/tmp/nac-npm-cache"
+  "installCommand": "npm install --no-audit --no-fund --legacy-peer-deps --ignore-scripts --cache=/tmp/nac-npm-cache"
 }

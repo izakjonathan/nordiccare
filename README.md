@@ -1,9 +1,18 @@
-# Nordic Auto Care Web
+# Nordic Auto Care Web v13
 
-Version: v12 deploy install fix
+Based on v12. Removes the backend footer block from all backend modules so the backend no longer shows the bottom “Nordic Auto Care / Tak for din tid og tillid / Åbn kundeside” footer.
 
-- Customer frontend: `/`
-- Backend/admin: `/backend`
-- Prototype backend PIN: `2026`
+Customer site: `/`
+Backend: `/backend`
+Prototype PIN: `2026`
 
-This version is based on v11 and fixes Vercel deployment stability by removing the npm lockfile, pinning package versions, setting Node to 22.x, and using a safer Vercel install command.
+Build tested with:
+
+```bash
+npm install --no-audit --no-fund --legacy-peer-deps --ignore-scripts
+npm run build
+```
+
+
+## v14 icons
+Added favicon, Apple touch icons, PWA icon files and web manifest for Vercel deployment.
