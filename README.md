@@ -1,39 +1,50 @@
-# Nordic Auto Care Web v7
+# Nordic Auto Care Web v8
 
-Built from `nordic-auto-care-web-v6-separated-backend.zip`.
+Next.js + Tailwind prototype for Nordic Auto Care.
 
 ## Routes
 
-- `/` — standalone customer booking/request frontend.
-- `/backend` — separated backend with prototype PIN gate.
+- `/` customer frontend
+- `/backend` separated backend
+- Backend prototype PIN: `2026`
 
-Prototype backend PIN: `2026`
+## v8 changes
 
-## Added in v7
+Built from `nordic-auto-care-web-v7-invoice-module.zip`.
 
-Backend invoice module prepared for customer invoices:
+- Adds a fixed bottom order/footer card on the customer frontend when an order draft exists.
+- The order footer card can expand/collapse.
+- Expanded order footer shows all current draft information:
+  - selected package per car
+  - included package items
+  - extra standalone services
+  - tillæg/extras
+  - car info and notes
+  - contact info
+  - invoice info
+  - preferred date/time
+  - total price
+- Footer card can submit the booking form directly or jump back to edit.
+- Package selection cards in the booking form now show the same included item overview as the package overview section further down the page.
+- Backend and invoice module from v7 are kept.
 
-- new `Faktura` backend tab
-- create invoice drafts from existing orders
-- invoice numbers generated as `NAC-YYYY-0001`
-- editable invoice customer, company, CVR, invoice address and email
-- editable invoice lines, quantities and prices
-- due date field
-- invoice statuses: Kladde, Sendt, Betalt, Forfalden, Annulleret
-- send invoice action opens a prefilled email to the customer and marks invoice as sent
-- mark invoice paid action updates invoice status and linked order payment/status
-- invoice status overview with draft/sent/paid/open amount
-- invoices saved locally in browser localStorage for prototype use
-
-## Notes
-
-This is still a frontend/localStorage prototype. Sending invoices currently opens the user's email client with a prefilled invoice email. A real production invoice flow should connect to a database, an email provider and/or a Danish accounting system such as e-conomic, Dinero or Billy.
-
-## Development
+## Local development
 
 ```bash
 npm install
 npm run dev
+```
+
+Open customer frontend:
+
+```text
+http://localhost:3000
+```
+
+Open backend:
+
+```text
+http://localhost:3000/backend
 ```
 
 ## Build test
@@ -42,4 +53,4 @@ npm run dev
 npm run build
 ```
 
-Production build tested successfully.
+Build passes successfully.
