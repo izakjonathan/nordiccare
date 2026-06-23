@@ -1,27 +1,33 @@
-# Nordic Auto Care Web v6
+# Nordic Auto Care Web v7
 
-Next.js + Tailwind customer webpage and separated order backend.
+Built from `nordic-auto-care-web-v6-separated-backend.zip`.
 
 ## Routes
 
-- `/` — standalone customer-facing frontend with booking/request flow and prices.
-- `/backend` — separated backend/order operations area.
+- `/` — standalone customer booking/request frontend.
+- `/backend` — separated backend with prototype PIN gate.
 
-## Backend access
+Prototype backend PIN: `2026`
 
-The backend is behind a simple prototype PIN gate.
+## Added in v7
 
-- Admin PIN: `2026`
+Backend invoice module prepared for customer invoices:
 
-This is only a frontend/sessionStorage gate for the current prototype. For real customer use, replace it with proper authentication and a real database.
+- new `Faktura` backend tab
+- create invoice drafts from existing orders
+- invoice numbers generated as `NAC-YYYY-0001`
+- editable invoice customer, company, CVR, invoice address and email
+- editable invoice lines, quantities and prices
+- due date field
+- invoice statuses: Kladde, Sendt, Betalt, Forfalden, Annulleret
+- send invoice action opens a prefilled email to the customer and marks invoice as sent
+- mark invoice paid action updates invoice status and linked order payment/status
+- invoice status overview with draft/sent/paid/open amount
+- invoices saved locally in browser localStorage for prototype use
 
-## Included in v6
+## Notes
 
-- Customer frontend no longer links to backend.
-- Backend has a link back to the customer frontend.
-- Backend moved to `/backend` and is separate from the customer page.
-- Backend has simple PIN screen so normal customers do not see operations tools.
-- Existing v5 order tools kept: overview, pipeline, calendar, customers, backup/import, full editing, statuses, payment status, priority, responsible person and activity log.
+This is still a frontend/localStorage prototype. Sending invoices currently opens the user's email client with a prefilled invoice email. A real production invoice flow should connect to a database, an email provider and/or a Danish accounting system such as e-conomic, Dinero or Billy.
 
 ## Development
 
@@ -30,8 +36,10 @@ npm install
 npm run dev
 ```
 
-## Production build
+## Build test
 
 ```bash
 npm run build
 ```
+
+Production build tested successfully.
