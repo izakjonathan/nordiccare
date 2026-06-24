@@ -1,8 +1,8 @@
 {
-  "name": "Nordic Auto Care",
-  "short_name": "NAC",
-  "description": "Nordic Auto Care booking og kundeside.",
-  "scope": "/",
+  "name": "Nordic Auto Care Backend",
+  "short_name": "NAC Admin",
+  "description": "Nordic Auto Care backend og ordreoverblik.",
+  "scope": "/backend",
   "display": "standalone",
   "orientation": "portrait",
   "theme_color": "#000000",
@@ -39,5 +39,6 @@
       "purpose": "maskable"
     }
   ],
-  "id": "/"
+  "id": "/backend",
+  "start_url": "/backend"
 }

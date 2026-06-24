@@ -20,3 +20,7 @@ Added favicon, Apple touch icons, PWA icon files and web manifest for Vercel dep
 
 ## v15 homescreen icon fix
 Added explicit iOS apple-touch-icon links, apple-touch-icon-precomposed, extra iOS icon sizes, root favicon files, and expanded web manifest. Existing homescreen shortcuts may need to be deleted and re-added because iOS caches icons.
+
+
+## v16 backend homescreen fix
+Removed forced `start_url: /` from the main manifest so iOS keeps the exact URL used when adding to Home Screen. Added a backend manifest and backend route metadata with `start_url: /backend`.
