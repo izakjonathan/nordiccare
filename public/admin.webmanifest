@@ -1,6 +1,6 @@
 {
-  "name": "Nordic Auto Care Backend",
-  "short_name": "NAC Backend",
+  "name": "Nordic Auto Care Admin",
+  "short_name": "NAC Admin",
   "description": "Nordic Auto Care backend og ordreoverblik.",
   "scope": "/",
   "display": "standalone",
@@ -39,6 +39,6 @@
       "purpose": "maskable"
     }
   ],
-  "id": "/backend",
-  "start_url": "/backend"
+  "id": "/admin",
+  "start_url": "/admin"
 }

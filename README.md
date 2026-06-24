@@ -32,3 +32,7 @@ Adds package-lock.json, .npmrc retry/timeout settings, packageManager, and expli
 
 ## v18 backend homescreen direct fix
 Removed the global hardcoded frontend manifest link from root layout. The customer frontend now declares `/site.webmanifest` only on `/`, while `/backend` declares `/backend.webmanifest`, so iOS can add the backend shortcut with `start_url: /backend` instead of always opening `/`.
+
+
+## v19 backend homescreen aliases
+Adds direct backend-rendering aliases /admin, /backend-home and /backend-start. Removes root start_url from customer manifest to prevent iOS forcing / when a backend shortcut is added. Adds /version for deployment verification.
