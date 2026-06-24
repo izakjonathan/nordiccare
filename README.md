@@ -36,3 +36,7 @@ Removed the global hardcoded frontend manifest link from root layout. The custom
 
 ## v19 backend homescreen aliases
 Adds direct backend-rendering aliases /admin, /backend-home and /backend-start. Removes root start_url from customer manifest to prevent iOS forcing / when a backend shortcut is added. Adds /version for deployment verification.
+
+
+## v20 Vercel safe build
+Based on v19. Stabilized deployment by using Next 15.5.6 instead of Next 16/Turbopack, React 19.1.0, Node 22.x, npm lockfile, simple npm ci Vercel install command, and retry/timeout npmrc settings. Build tested locally.
