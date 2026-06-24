@@ -40,3 +40,6 @@ Adds direct backend-rendering aliases /admin, /backend-home and /backend-start. 
 
 ## v20 Vercel safe build
 Based on v19. Stabilized deployment by using Next 15.5.6 instead of Next 16/Turbopack, React 19.1.0, Node 22.x, npm lockfile, simple npm ci Vercel install command, and retry/timeout npmrc settings. Build tested locally.
+
+## v21 Vercel no npm ci
+Fixes the Vercel error `npm error Exit handler never called` by avoiding `npm ci`. Vercel now uses `npm install --no-audit --no-fund --legacy-peer-deps`, Node 20.x, exact dependency versions, and npm retry/timeout settings.
