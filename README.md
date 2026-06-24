@@ -24,3 +24,7 @@ Added explicit iOS apple-touch-icon links, apple-touch-icon-precomposed, extra i
 
 ## v16 backend homescreen fix
 Removed forced `start_url: /` from the main manifest so iOS keeps the exact URL used when adding to Home Screen. Added a backend manifest and backend route metadata with `start_url: /backend`.
+
+
+## v17 Vercel install network fix
+Adds package-lock.json, .npmrc retry/timeout settings, packageManager, and explicit Vercel install/build commands to make Vercel installs more stable after npm registry ETIMEDOUT errors.

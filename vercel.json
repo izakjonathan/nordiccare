@@ -1,5 +1,5 @@
 {
-  "framework": "nextjs",
+  "installCommand": "npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-maxtimeout=120000 --fetch-timeout=300000",
   "buildCommand": "npm run build",
-  "installCommand": "npm install --no-audit --no-fund --legacy-peer-deps --ignore-scripts --cache=/tmp/nac-npm-cache"
+  "framework": "nextjs"
 }
