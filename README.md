@@ -28,3 +28,7 @@ Removed forced `start_url: /` from the main manifest so iOS keeps the exact URL 
 
 ## v17 Vercel install network fix
 Adds package-lock.json, .npmrc retry/timeout settings, packageManager, and explicit Vercel install/build commands to make Vercel installs more stable after npm registry ETIMEDOUT errors.
+
+
+## v18 backend homescreen direct fix
+Removed the global hardcoded frontend manifest link from root layout. The customer frontend now declares `/site.webmanifest` only on `/`, while `/backend` declares `/backend.webmanifest`, so iOS can add the backend shortcut with `start_url: /backend` instead of always opening `/`.

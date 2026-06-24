@@ -5,7 +5,6 @@ export const metadata: Metadata = {
   title: "Nordic Auto Care",
   applicationName: "Nordic Auto Care",
   description: "Professionel bilpleje, rengøring, polering og lakbeskyttelse hos Nordic Auto Care.",
-  manifest: "/site.webmanifest",
   appleWebApp: {
     capable: true,
     title: "Nordic Auto Care",
@@ -52,7 +51,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon-152x152.png" />
         <link rel="apple-touch-icon" sizes="120x120" href="/apple-touch-icon-120x120.png" />
         <link rel="apple-touch-icon-precomposed" href="/apple-touch-icon-precomposed.png" />
-        <link rel="manifest" href="/site.webmanifest" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-title" content="Nordic Auto Care" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
