@@ -1,21 +1,46 @@
-# Nordic Auto Care v25 static with JSON
+# Nordic Auto Care Web v13
 
-This version is made for the commit app and Vercel.
+Based on v12. Removes the backend footer block from all backend modules so the backend no longer shows the bottom “Nordic Auto Care / Tak for din tid og tillid / Åbn kundeside” footer.
 
-It includes:
-- package.json
-- vercel.json
-- no dependencies
-- no real install command
-- no real build command
-- static route folders
+Customer site: `/`
+Backend: `/backend`
+Prototype PIN: `2026`
 
-Routes:
-- /
-- /admin
-- /backend
-- /backend-home
-- /backend-start
-- /version
+Build tested with:
 
-Use `/admin` for the backend homescreen shortcut.
+```bash
+npm install --no-audit --no-fund --legacy-peer-deps --ignore-scripts
+npm run build
+```
+
+
+## v14 icons
+Added favicon, Apple touch icons, PWA icon files and web manifest for Vercel deployment.
+
+
+## v15 homescreen icon fix
+Added explicit iOS apple-touch-icon links, apple-touch-icon-precomposed, extra iOS icon sizes, root favicon files, and expanded web manifest. Existing homescreen shortcuts may need to be deleted and re-added because iOS caches icons.
+
+
+## v16 backend homescreen fix
+Removed forced `start_url: /` from the main manifest so iOS keeps the exact URL used when adding to Home Screen. Added a backend manifest and backend route metadata with `start_url: /backend`.
+
+
+## v17 Vercel install network fix
+Adds package-lock.json, .npmrc retry/timeout settings, packageManager, and explicit Vercel install/build commands to make Vercel installs more stable after npm registry ETIMEDOUT errors.
+
+
+## v18 backend homescreen direct fix
+Removed the global hardcoded frontend manifest link from root layout. The customer frontend now declares `/site.webmanifest` only on `/`, while `/backend` declares `/backend.webmanifest`, so iOS can add the backend shortcut with `start_url: /backend` instead of always opening `/`.
+
+
+## v19 backend homescreen aliases
+Adds direct backend-rendering aliases /admin, /backend-home and /backend-start. Removes root start_url from customer manifest to prevent iOS forcing / when a backend shortcut is added. Adds /version for deployment verification.
+
+
+## v20 Vercel safe build
+Based on v19. Stabilized deployment by using Next 15.5.6 instead of Next 16/Turbopack, React 19.1.0, Node 22.x, npm lockfile, simple npm ci Vercel install command, and retry/timeout npmrc settings. Build tested locally.
+
+
+## v26 deployment fix from uploaded v20
+Built directly from `nordic-auto-care-web-v20-vercel-safe-build(1).zip`. Customer/backend layout, content, and app files are unchanged. Deployment was fixed by using Node 24.x, a real package-lock, npm ci, and Next 14 with `next.config.mjs` because the Next 15 build was hanging during build tracing. Local npm ci and production build were tested successfully.
