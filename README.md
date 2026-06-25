@@ -47,3 +47,7 @@ Fixes the Vercel error `npm error Exit handler never called` by avoiding `npm ci
 
 ## v22 Node 24 Vercel build
 Based on v21. Updates package.json engines to Node 24.x, packageManager to npm 11.6.2, keeps npm install instead of npm ci, and keeps exact dependency versions and backend aliases.
+
+
+## v23 Node 24 npm ci Vercel fix
+Uses Node 24.x with a fresh package-lock.json and explicit `npm ci --no-audit --no-fund --legacy-peer-deps`. Tested local npm install, npm ci, and production build successfully.
