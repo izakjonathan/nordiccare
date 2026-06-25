@@ -1,5 +1,42 @@
 {
-  "framework": "nextjs",
-  "installCommand": "npm ci --no-audit --no-fund --legacy-peer-deps",
-  "buildCommand": "npm run build"
+  "version": 2,
+  "framework": null,
+  "installCommand": "echo \"No install needed\"",
+  "buildCommand": "echo \"No build needed\"",
+  "outputDirectory": ".",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/admin",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/backend",
+      "destination": "/backend/index.html"
+    },
+    {
+      "source": "/backend-home",
+      "destination": "/backend-home/index.html"
+    },
+    {
+      "source": "/backend-start",
+      "destination": "/backend-start/index.html"
+    },
+    {
+      "source": "/version",
+      "destination": "/version/index.html"
+    }
+  ]
 }

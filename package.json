@@ -1,29 +1,15 @@
 {
-  "name": "nordic-auto-care-web",
-  "version": "1.0.0",
+  "name": "nordic-auto-care-static",
+  "version": "25.0.0",
   "private": true,
+  "description": "Nordic Auto Care static Vercel deployment",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
-  },
-  "dependencies": {
-    "@tailwindcss/postcss": "4.1.17",
-    "next": "15.5.6",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "tailwindcss": "4.1.17"
-  },
-  "devDependencies": {
-    "@types/node": "24.10.3",
-    "@types/react": "19.1.8",
-    "@types/react-dom": "19.1.6",
-    "eslint": "9.30.1",
-    "eslint-config-next": "15.5.6",
-    "typescript": "5.8.3"
+    "build": "echo \"Static site - no build required\"",
+    "start": "echo \"Static site\""
   },
   "engines": {
     "node": "24.x"
   },
-  "packageManager": "npm@11.6.2"
+  "dependencies": {},
+  "devDependencies": {}
 }
